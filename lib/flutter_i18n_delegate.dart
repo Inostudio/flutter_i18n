@@ -46,4 +46,8 @@ class FlutterI18nDelegate extends LocalizationsDelegate<FlutterI18n> {
     return this.currentLocale == null ||
         this.currentLocale == old.currentLocale;
   }
+
+  Map<dynamic, dynamic>? getTranslationMap() {
+    return _translationObject?.decodedMap;
+  }
 }

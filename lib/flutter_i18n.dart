@@ -144,6 +144,11 @@ class FlutterI18n {
     return _retrieveCurrentInstance(context)!.isLoadedStream;
   }
 
+  static Map<dynamic, dynamic>? getTranslationMap(BuildContext context) {
+    final instance = _retrieveCurrentInstance(context);
+    return instance?.decodedMap;
+  }
+
   static _findTextDirection(final Locale? locale) {
     return intl.Bidi.isRtlLanguage(locale?.languageCode)
         ? TextDirection.rtl
