@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart' as Foundation;
 import 'package:flutter/widgets.dart';
 import 'package:flutter_i18n/loaders/file_translation_loader.dart';
@@ -8,9 +7,8 @@ import 'package:flutter_i18n/models/loading_status.dart';
 import 'package:flutter_i18n/utils/plural_translator.dart';
 import 'package:flutter_i18n/utils/simple_translator.dart';
 import 'package:intl/intl.dart' as intl;
-
+import 'utils/loading_status_stream.dart';
 import 'utils/message_printer.dart';
-
 export 'flutter_i18n_delegate.dart';
 export 'loaders/e2e_file_translation_loader.dart';
 export 'loaders/file_translation_loader.dart';
@@ -30,15 +28,18 @@ class FlutterI18n {
 
   Map<dynamic, dynamic>? decodedMap;
 
-  final _localeStream = StreamController<Locale?>.broadcast();
-
   // ignore: close_sinks
-  final _loadingStream = StreamController<LoadingStatus>.broadcast();
+  static final _localeStream = StreamController<Locale>.broadcast();
 
-  Stream<LoadingStatus> get loadingStream => _loadingStream.stream;
+  static Stream<Locale> get localeStream => _localeStream.stream;
 
-  Stream<bool> get isLoadedStream => loadingStream
+  static final loadingStream = LoadingStatusStream();
+
+  static Stream<bool> get isLoadedStream => loadingStream.stream
       .map((loadingStatus) => loadingStatus == LoadingStatus.loaded);
+
+  static Future<bool> get isLoadedFuture =>
+      loadingStream.stream.any((e) => e == LoadingStatus.loaded);
 
   FlutterI18n(
     TranslationLoader? translationLoader,
@@ -46,7 +47,7 @@ class FlutterI18n {
     MissingTranslationHandler? missingTranslationHandler,
   }) {
     this.translationLoader = translationLoader ?? FileTranslationLoader();
-    this._loadingStream.add(LoadingStatus.notLoaded);
+    loadingStream.setState(LoadingStatus.notLoaded);
     this.missingTranslationHandler =
         missingTranslationHandler ?? (key, locale) {};
     this.keySeparator = keySeparator;
@@ -55,10 +56,10 @@ class FlutterI18n {
 
   /// Used to load the locale translation file
   Future<bool> load() async {
-    this._loadingStream.add(LoadingStatus.loading);
+    loadingStream.setState(LoadingStatus.loading);
     decodedMap = await translationLoader!.load();
     _localeStream.add(locale);
-    this._loadingStream.add(LoadingStatus.loaded);
+    loadingStream.setState(LoadingStatus.loaded);
     return true;
   }
 
@@ -123,7 +124,7 @@ class FlutterI18n {
       final instance = _retrieveCurrentInstance(context);
       return StreamBuilder<Locale?>(
           initialData: instance?.locale,
-          stream: instance?._localeStream.stream,
+          stream: localeStream,
           builder: (BuildContext context, AsyncSnapshot<Locale?> snapshot) {
             return Directionality(
               textDirection: _findTextDirection(snapshot.data),
@@ -136,12 +137,12 @@ class FlutterI18n {
   /// Used to retrieve the loading status stream
   static Stream<LoadingStatus> retrieveLoadingStream(
       final BuildContext context) {
-    return _retrieveCurrentInstance(context)!.loadingStream;
+    return loadingStream.stream;
   }
 
   /// Used to check if the translation file is still loading
   static Stream<bool> retrieveLoadedStream(final BuildContext context) {
-    return _retrieveCurrentInstance(context)!.isLoadedStream;
+    return isLoadedStream;
   }
 
   static Map<dynamic, dynamic>? getTranslationMap(BuildContext context) {
