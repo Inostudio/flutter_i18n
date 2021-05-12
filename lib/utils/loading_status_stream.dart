@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:flutter_i18n/models/loading_status.dart';
+import 'loading_status.dart';
 
 class LoadingStatusStream {
   // ignore: close_sinks
