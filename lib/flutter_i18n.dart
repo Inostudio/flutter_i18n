@@ -119,8 +119,8 @@ class FlutterI18n {
   }
 
   /// Build for root widget, to support RTL languages
-  static rootAppBuilder() {
-    return (BuildContext context, Widget child) {
+  static Widget Function(BuildContext context, Widget? child) rootAppBuilder() {
+    return (BuildContext context, Widget? child) {
       final instance = _retrieveCurrentInstance(context);
       return StreamBuilder<Locale?>(
           initialData: instance?.locale,
@@ -128,7 +128,7 @@ class FlutterI18n {
           builder: (BuildContext context, AsyncSnapshot<Locale?> snapshot) {
             return Directionality(
               textDirection: _findTextDirection(snapshot.data),
-              child: child,
+              child: child ?? const SizedBox(),
             );
           });
     };
